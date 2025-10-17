@@ -10,7 +10,7 @@ const MONGO_URI = process.env.MONGO_URI;
 const app = express();
 
 const corsOptions = {
-  origin: 'http://localhost:8080',
+  origin: ['http://localhost:8080', 'http://192.168.189.1:8080'],
   credentials: true,
 };
 
