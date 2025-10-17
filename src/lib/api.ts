@@ -42,7 +42,7 @@ class ApiClient {
 
     if (!response.ok) {
       const error: ApiError = await response.json().catch(() => ({
-        message: 'An error occurred',
+        message: `Request failed with status ${response.status}`,
         status: response.status,
       }));
       throw new Error(error.message || 'Request failed');
@@ -52,44 +52,69 @@ class ApiClient {
   }
 
   /**
+   * Handle network errors (e.g., when backend is not available)
+   */
+  private handleNetworkError(error: unknown): never {
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      throw new Error(
+        'Unable to connect to backend API. Please ensure the backend server is running at ' + 
+        this.baseUrl
+      );
+    }
+    throw error;
+  }
+
+  /**
    * POST request with JSON body
    */
   async post<T>(endpoint: string, data?: unknown): Promise<T> {
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
-      method: 'POST',
-      headers: this.getAuthHeaders(),
-      body: data ? JSON.stringify(data) : undefined,
-    });
-    return this.handleResponse<T>(response);
+    try {
+      const response = await fetch(`${this.baseUrl}${endpoint}`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: data ? JSON.stringify(data) : undefined,
+      });
+      return this.handleResponse<T>(response);
+    } catch (error) {
+      return this.handleNetworkError(error);
+    }
   }
 
   /**
    * POST request with FormData (for file uploads)
    */
   async postFormData<T>(endpoint: string, formData: FormData): Promise<T> {
-    const token = localStorage.getItem('token');
-    const headers: HeadersInit = {};
-    if (token) {
-      headers.Authorization = `Bearer ${token}`;
-    }
+    try {
+      const token = localStorage.getItem('token');
+      const headers: HeadersInit = {};
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
 
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
-      method: 'POST',
-      headers,
-      body: formData,
-    });
-    return this.handleResponse<T>(response);
+      const response = await fetch(`${this.baseUrl}${endpoint}`, {
+        method: 'POST',
+        headers,
+        body: formData,
+      });
+      return this.handleResponse<T>(response);
+    } catch (error) {
+      return this.handleNetworkError(error);
+    }
   }
 
   /**
    * GET request
    */
   async get<T>(endpoint: string): Promise<T> {
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
-      method: 'GET',
-      headers: this.getAuthHeaders(),
-    });
-    return this.handleResponse<T>(response);
+    try {
+      const response = await fetch(`${this.baseUrl}${endpoint}`, {
+        method: 'GET',
+        headers: this.getAuthHeaders(),
+      });
+      return this.handleResponse<T>(response);
+    } catch (error) {
+      return this.handleNetworkError(error);
+    }
   }
 
   /**

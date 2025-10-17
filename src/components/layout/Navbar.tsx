@@ -29,10 +29,10 @@ export function Navbar() {
         <div className="flex items-center gap-6">
           <button
             onClick={() => navigate('/dashboard')}
-            className="flex items-center gap-2 text-xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent hover:opacity-80 transition-opacity"
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
           >
             <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-primary-glow" />
-            AgentFlow
+            <span className="text-xl font-bold text-foreground">AgentFlow</span>
           </button>
         </div>
 

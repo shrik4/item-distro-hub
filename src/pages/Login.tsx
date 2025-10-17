@@ -73,7 +73,17 @@ export default function Login() {
 
       navigate('/dashboard');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed. Please try again.');
+      const errorMessage = err instanceof Error 
+        ? err.message 
+        : 'Login failed. Please check your credentials and try again.';
+      setError(errorMessage);
+      
+      // Also show toast for better visibility
+      toast({
+        variant: 'destructive',
+        title: 'Login Failed',
+        description: errorMessage,
+      });
     } finally {
       setIsLoading(false);
     }
@@ -85,7 +95,7 @@ export default function Login() {
         <CardHeader className="space-y-1">
           <div className="flex items-center gap-2 mb-2">
             <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary to-primary-glow" />
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
+            <h1 className="text-2xl font-bold text-foreground">
               AgentFlow
             </h1>
           </div>
@@ -137,9 +147,16 @@ export default function Login() {
             </Button>
           </form>
 
-          <div className="mt-6 text-center text-sm text-muted-foreground">
-            <p>Demo credentials for testing:</p>
-            <p className="font-mono text-xs mt-1">admin@example.com / password123</p>
+          <div className="mt-6 p-4 rounded-lg bg-muted/50 border">
+            <p className="text-sm font-medium text-center mb-2">Demo Mode</p>
+            <p className="text-xs text-muted-foreground text-center mb-2">
+              Backend API not connected. To test the full application:
+            </p>
+            <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
+              <li>Set up your backend API</li>
+              <li>Create <code className="bg-muted px-1 rounded">.env.local</code> file</li>
+              <li>Add: <code className="bg-muted px-1 rounded">VITE_API_BASE_URL=http://localhost:5000</code></li>
+            </ol>
           </div>
         </CardContent>
       </Card>
