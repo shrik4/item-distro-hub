@@ -1,10 +1,10 @@
 /**
- * Login page with email/password authentication
+ * Signup page with email/password authentication
  * Redirects authenticated users to dashboard
  */
 
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -17,16 +17,16 @@ import { Loader2, AlertCircle } from 'lucide-react';
 import { api } from '@/lib/api';
 import { setToken, setUser, isAuthenticated } from '@/lib/auth';
 import { useToast } from '@/hooks/use-toast';
-import { Link } from 'react-router-dom';
 
-const loginSchema = z.object({
+const signupSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
   email: z.string().email('Invalid email address'),
-  password: z.string().min(1, 'Password is required'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
-type LoginFormData = z.infer<typeof loginSchema>;
+type SignupFormData = z.infer<typeof signupSchema>;
 
-interface LoginResponse {
+interface SignupResponse {
   token: string;
   user: {
     id: string;
@@ -35,7 +35,7 @@ interface LoginResponse {
   };
 }
 
-export default function Login() {
+export default function Signup() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
@@ -45,8 +45,8 @@ export default function Login() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
+  } = useForm<SignupFormData>({
+    resolver: zodResolver(signupSchema),
   });
 
   // Redirect if already authenticated
@@ -56,33 +56,33 @@ export default function Login() {
     }
   }, [navigate]);
 
-  const onSubmit = async (data: LoginFormData) => {
+  const onSubmit = async (data: SignupFormData) => {
     setIsLoading(true);
     setError('');
 
     try {
-      const response = await api.post<LoginResponse>('/api/auth/login', data);
+      const response = await api.post<SignupResponse>('/api/auth/register', data);
       
       // Save token and user info
       setToken(response.token);
       setUser(response.user);
 
       toast({
-        title: 'Welcome back!',
-        description: `Logged in as ${response.user.email}`,
+        title: 'Welcome!',
+        description: `Account created for ${response.user.email}`,
       });
 
       navigate('/dashboard');
     } catch (err) {
       const errorMessage = err instanceof Error 
         ? err.message 
-        : 'Login failed. Please check your credentials and try again.';
+        : 'Signup failed. Please try again.';
       setError(errorMessage);
       
       // Also show toast for better visibility
       toast({
         variant: 'destructive',
-        title: 'Login Failed',
+        title: 'Signup Failed',
         description: errorMessage,
       });
     } finally {
@@ -100,9 +100,9 @@ export default function Login() {
               AgentFlow
             </h1>
           </div>
-          <CardTitle className="text-2xl">Welcome back</CardTitle>
+          <CardTitle className="text-2xl">Create an account</CardTitle>
           <CardDescription>
-            Enter your credentials to access your account
+            Enter your details to create a new account
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -113,6 +113,20 @@ export default function Login() {
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
+
+            <div className="space-y-2">
+              <Label htmlFor="name">Name</Label>
+              <Input
+                id="name"
+                type="text"
+                placeholder="John Doe"
+                {...register('name')}
+                disabled={isLoading}
+              />
+              {errors.name && (
+                <p className="text-sm text-destructive">{errors.name.message}</p>
+              )}
+            </div>
 
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -144,28 +158,16 @@ export default function Login() {
 
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Sign In
+              Sign Up
             </Button>
           </form>
 
-          <div className="mt-4 text-center text-sm">
-            Don't have an account?{" "}
-            <Link to="/signup" className="underline">
-              Sign up
+          <p className="mt-4 text-center text-sm text-muted-foreground">
+            Already have an account?{' '}
+            <Link to="/" className="text-primary hover:underline">
+              Sign In
             </Link>
-          </div>
-
-          <div className="mt-6 p-4 rounded-lg bg-muted/50 border">
-            <p className="text-sm font-medium text-center mb-2">Demo Mode</p>
-            <p className="text-xs text-muted-foreground text-center mb-2">
-              Backend API not connected. To test the full application:
-            </p>
-            <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
-              <li>Set up your backend API</li>
-              <li>Create <code className="bg-muted px-1 rounded">.env.local</code> file</li>
-              <li>Add: <code className="bg-muted px-1 rounded">VITE_API_BASE_URL=http://localhost:5000</code></li>
-            </ol>
-          </div>
+          </p>
         </CardContent>
       </Card>
     </div>
